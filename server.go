@@ -79,7 +79,7 @@ func (s *Server) addAlbum(w http.ResponseWriter, r *http.Request) {
 		Error   string `json:"error"`
 		Message string `json:"message,omitempty"`
 	}
-	issues := make(map[string]interface{})
+	issues := make(map[string]any)
 	if album.ID == "" {
 		issues["id"] = validationIssue{"required", ""}
 	}
@@ -126,7 +126,7 @@ func (s *Server) getAlbumByID(w http.ResponseWriter, r *http.Request, id string)
 // writeJSON marshals v to JSON and writes it to the response, handling
 // errors as appropriate. It also sets the Content-Type header to
 // "application/json".
-func (s *Server) writeJSON(w http.ResponseWriter, status int, v interface{}) {
+func (s *Server) writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	b, err := json.MarshalIndent(v, "", "    ")
 	if err != nil {
@@ -144,11 +144,11 @@ func (s *Server) writeJSON(w http.ResponseWriter, status int, v interface{}) {
 
 // jsonError writes a structured error as JSON to the response, with
 // optional structured data in the "data" field.
-func (s *Server) jsonError(w http.ResponseWriter, status int, error string, data map[string]interface{}) {
+func (s *Server) jsonError(w http.ResponseWriter, status int, error string, data map[string]any) {
 	response := struct {
-		Status int                    `json:"status"`
-		Error  string                 `json:"error"`
-		Data   map[string]interface{} `json:"data,omitempty"`
+		Status int            `json:"status"`
+		Error  string         `json:"error"`
+		Data   map[string]any `json:"data,omitempty"`
 	}{
 		Status: status,
 		Error:  error,
@@ -160,7 +160,7 @@ func (s *Server) jsonError(w http.ResponseWriter, status int, error string, data
 // readJSON reads the request body and unmarshal it from JSON, handling
 // errors as appropriate. It returns true on success; the caller should
 // return from the handler early if it returns false.
-func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
+func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, v any) bool {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.log.Printf("error reading JSON body: %v", err)
@@ -169,7 +169,7 @@ func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, v interface{})
 	}
 	err = json.Unmarshal(b, v)
 	if err != nil {
-		data := map[string]interface{}{"message": err.Error()}
+		data := map[string]any{"message": err.Error()}
 		s.jsonError(w, http.StatusBadRequest, ErrorMalformedJSON, data)
 		return false
 	}
